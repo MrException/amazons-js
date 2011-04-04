@@ -32,6 +32,9 @@ var state;
 var images;
 
 $(document).ready(function(){
+    var socket = new io.Socket();
+    socket.connect();
+
     initState();
     initCanvas();
 });
