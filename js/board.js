@@ -1,8 +1,29 @@
 // target frames per second
-const FPS = 30;
+const FPS = 20;
 
 var canvas = null;
-var context2D = null;
+var ctx = null;
+
+var cellDim = 50;
+var offset = 50;
+var width = 600;
+var height = 600;
+
+// mouse positions
+var mx = -1;
+var my = -1;
+var absx = -1;
+var absy = -1;
+
+// some vars for the move
+var move = [];
+var moveCounter = 0;
+
+// is it our turn?
+var ourTurn = 1;
+
+// what colour are we?
+var ourSide = 'W';
 
 // the state
 var state;
@@ -36,39 +57,24 @@ var initState = function(){
     state[6][9] = 'W';
 
     // images
-    images = new Array(2);
-    images[0] = {};
-    images[1] = {};
+    images = {};
+    images.W = new Image();
+    images.W.src = "img/white.png";
+    images.B = new Image();
+    images.B.src = "img/black.png";
 
-    // blank squares
-    images[0].F = new Image();
-    images[0].F.src = "img/b.gif";
-    images[1].F = new Image();
-    images[1].F.src = "img/w.gif";
-
-    // black queens
-    images[0].B = new Image();
-    images[0].B.src = "img/bkb.gif";
-    images[1].B = new Image();
-    images[1].B.src = "img/bkw.gif";
-
-    // white queens
-    images[0].W = new Image();
-    images[0].W.src = "img/wkb.gif";
-    images[1].W = new Image();
-    images[1].W.src = "img/wkw.gif";
-
-    // arrows
-    images[0].A = new Image();
-    images[0].A.src = "img/akb.gif";
-    images[1].A = new Image();
-    images[1].A.src = "img/akw.gif";
+    // TODO: maybe get an image for arrow instead of just black square?
+    //images.A = new Image();
+    //images.A.src = "";
 };
 
 var initCanvas = function() {
     // get a handle on the canvas and the context
     canvas = document.getElementById('amazons');
-    context2D = canvas.getContext('2d');
+
+    canvas.addEventListener("mousemove", getCursorPosition, false);
+    canvas.addEventListener("click", mouseClick, false);
+    ctx = canvas.getContext('2d');
 
     // set the refresh interval
     setInterval(drawBoard, FPS / 1000);
@@ -78,17 +84,43 @@ var initCanvas = function() {
 };
 
 var drawBoard = function() {
+    // clear the screen
+    ctx.clearRect(0,0,width,height);
+
+    // draw the grid using a path
+    ctx.strokeStyle = "#000000";
+    ctx.beginPath();
     for (var x = 0; x < 10; x++) {
+        ctx.moveTo(x*cellDim+offset,offset);
+        ctx.lineTo(x*cellDim+offset,height-offset);
         for (var y = 0; y < 10; y++) {
-            if (x % 2 == y % 2) {
-                // both odd or both even, it's a a white square
-                context2D.drawImage(images[0][state[x][y]], x*50, y*50);
+            ctx.moveTo(offset,y*cellDim+offset);
+            ctx.lineTo(width-offset,y*cellDim+offset);
+
+            // also place images for queens
+            if (state[x][y] === 'B' || state[x][y] === 'W') {
+                ctx.drawImage(images[state[x][y]], x*cellDim+offset, y*cellDim+offset);
             }
-            else {
-                // otherwise it's a black square
-                context2D.drawImage(images[1][state[x][y]], x*50, y*50);
+            // and a black square for the arrows
+            else if (state[x][y] === 'A') {
+                ctx.fillRect(x*cellDim+offset,y*cellDim+offset,cellDim,cellDim);
             }
         }
+    }
+
+    // need to draw the last two lines, the bottom and the rightmost
+    ctx.moveTo(10*cellDim+offset,offset);
+    ctx.lineTo(10*cellDim+offset,height-offset);
+    ctx.moveTo(offset,10*cellDim+offset);
+    ctx.lineTo(width-offset,10*cellDim+offset);
+    ctx.stroke();
+
+    // draw a nice red square wherever the mouse is
+    if (mx > -1 && my > -1) {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#FF0000";
+        ctx.strokeRect(mx*cellDim+offset,my*cellDim+offset,cellDim,cellDim);
+        ctx.lineWidth = 1;
     }
 };
 
@@ -105,9 +137,75 @@ var getCursorPosition = function(e) {
     }
     x -= canvas.offsetLeft;
     y -= canvas.offsetTop;
-    x = Math.min(x, kBoardWidth * kPieceWidth);
-    y = Math.min(y, kBoardHeight * kPieceHeight);
 
-    var cell = [x,y];
-    return cell;
+    // figure out if it is in a square or not
+    if (x > offset && x < width-offset && y > offset && y < height-offset) {
+        mx = Math.floor((x - offset) / cellDim);
+        my = Math.floor((y - offset) / cellDim);
+    }
+    else {
+        mx = -1;
+        my = -1;
+    }
+
+    $("#debug").html("<p>Mouse Pos: (" + mx + "," + my + ")</p>");
+};
+
+var mouseClick = function() {
+    if (ourTurn === 1) {
+        if (moveCounter === 0) {
+            if (state[mx][my] === ourSide) {
+                moveCounter = 1;
+                move[0] = mx;
+                move[1] = my;
+                state[mx][my] = 'F';
+            }
+            else {
+                resetMove();
+            }
+        }
+        else if (moveCounter === 1) {
+            if (state[mx][my] === 'F') {
+                moveCounter = 2;
+                move[2] = mx;
+                move[3] = my;
+                state[mx][my] = ourSide;
+            } 
+            else {
+                // can't move there!
+                // make sure to reset where the queen was
+                state[move[0]][move[1]] = ourSide;
+                resetMove();
+            }
+        }
+        else if (moveCounter === 2) {
+            if (state[mx][my] === 'F') {
+                move[4] = mx;
+                move[5] = my;
+                state[mx][my] = 'A';
+                moveCounter = 0;
+                sendMove();
+            }
+            else {
+                resetMove();
+            }
+        }
+        else {
+            // shouldn't get here
+            resetMove();
+        }
+    }
+};
+
+var resetMove = function() {
+    move = [];
+    moveCounter = 0;
+};
+
+var sendMove = function() {
+    $("#move").html("<p>Move complete: from: (" + move[0] + "," + move[1] + ") to: (" + move[2] + "," + move[3] + ") arrow: (" + move[4] + "," + move[5] + ")</p>");
+};
+
+var getMove = function() {
+
 };
