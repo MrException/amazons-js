@@ -1,3 +1,10 @@
+#game {
+    float: left;
+}
 canvas {
     border: 1px solid black;
+}
+
+#debug {
+    float: right;
 }

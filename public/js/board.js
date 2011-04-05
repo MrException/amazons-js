@@ -37,10 +37,11 @@ var socket;
 $(document).ready(function(){
     initState();
     initCanvas();
+    initSocket();
 });
 
 var initSocket = function() {
-    var socket = new io.Socket();
+    socket = new io.Socket();
     socket.connect();
 
     socket.on('message', getMove);
@@ -158,7 +159,7 @@ var getCursorPosition = function(e) {
         my = -1;
     }
 
-    $("#debug").html("<p>Mouse Pos: (" + mx + "," + my + ")</p>");
+    //debugMsg("Mouse Pos: " + $.toJSON([mx,my]));
 };
 
 var mouseClick = function() {
@@ -180,7 +181,7 @@ var mouseClick = function() {
                 move[2] = mx;
                 move[3] = my;
                 state[mx][my] = ourSide;
-            } 
+            }
             else {
                 // can't move there!
                 // make sure to reset where the queen was
@@ -213,12 +214,18 @@ var resetMove = function() {
 };
 
 var sendMove = function() {
-    $("#move").html("<p>Move complete: from: (" + move[0] + "," + move[1] + ") to: (" + move[2] + "," + move[3] + ") arrow: (" + move[4] + "," + move[5] + ")</p>");
-    var moveStr = $.toJSON(move);    
+    debugMsg("Move complete: " + $.toJSON(move));
+    var moveStr = $.toJSON(move);
     resetMove();
     socket.send(moveStr);
 };
 
 var getMove = function(obj) {
-    $("#move").html("<p>Move received: " + obj);
+    debugMsg("Move received: " + $.toJSON(obj));
+};
+
+var debugMsg = function(str) {
+    var msg = document.createElement('p');
+    msg.innerHTML = str;
+    $('#debug').append(msg);
 };

@@ -13,6 +13,13 @@ app.use(express.static(__dirname + '/public'));
 app.listen(8080);
 
 var socket = io.listen(app);
-socket.on('connection', function() {
-    console.log('io connect');
+socket.on('connection', function(client) {
+    client.send("testing");
+    client.on('message', function(message) {
+        console.log(message);
+    });
+
+    client.on('disconnect', function() {
+        console.log('disconnected');
+    });
 });
