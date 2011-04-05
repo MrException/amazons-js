@@ -31,13 +31,20 @@ var state;
 // the images
 var images;
 
-$(document).ready(function(){
-    var socket = new io.Socket();
-    socket.connect();
+// the socket.io socket
+var socket;
 
+$(document).ready(function(){
     initState();
     initCanvas();
 });
+
+var initSocket = function() {
+    var socket = new io.Socket();
+    socket.connect();
+
+    socket.on('message', getMove);
+};
 
 var initState = function(){
     state = new Array(10);
@@ -207,8 +214,11 @@ var resetMove = function() {
 
 var sendMove = function() {
     $("#move").html("<p>Move complete: from: (" + move[0] + "," + move[1] + ") to: (" + move[2] + "," + move[3] + ") arrow: (" + move[4] + "," + move[5] + ")</p>");
+    var moveStr = $.toJSON(move);    
+    resetMove();
+    socket.send(moveStr);
 };
 
-var getMove = function() {
-
+var getMove = function(obj) {
+    $("#move").html("<p>Move received: " + obj);
 };
