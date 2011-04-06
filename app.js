@@ -31,8 +31,8 @@ app.configure('production', function(){
 /////////////////////////////////////////////////
 // routes
 app.get('/', function(req,res) {
-    res.render('index', {
-        title: 'Amazons'
+    res.render('login', {
+        title: 'Welcome'
     });
 });
 
