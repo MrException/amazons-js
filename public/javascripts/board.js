@@ -70,9 +70,9 @@ var initState = function(){
     // images
     images = {};
     images.W = new Image();
-    images.W.src = "img/white.png";
+    images.W.src = "/images/white.png";
     images.B = new Image();
-    images.B.src = "img/black.png";
+    images.B.src = "/images/black.png";
 
     // TODO: maybe get an image for arrow instead of just black square?
     //images.A = new Image();
