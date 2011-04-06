@@ -30,7 +30,9 @@ app.configure('production', function(){
 /////////////////////////////////////////////////
 // routes
 app.get('/', function(req,res) {
-    res.render('index');
+    res.render('index', {
+        title: 'Amazons'
+    });
 });
 
 app.get('/amazons', function(req,res) {
