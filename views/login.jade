@@ -1,0 +1,35 @@
+script
+  $(function() {
+    $('#password').hide();
+    $('button.username').click(function() {
+      var username = $('input.username').val();
+      if (username === '') {
+        return;
+      }
+      //$.post('/login',
+      //)
+    });
+
+    $('button.skip').click(function() {
+
+    });
+  });
+
+#login
+  #username
+    p What's your name?
+    form.username(action='#')
+      input.username(type='text')
+      button.username Ok!
+
+  #password
+    p.new-user
+      | Cool! You're new here!
+      | Enter a password and we can keep track of your scores.
+      | Or just skip this and you can go right on to playing games!
+    p.old-user
+      | Welcome back! Enter your password to continue.
+    form.password(action='#')
+      input.password(type='password')
+      button.skip Skip!
+      button.login Login!
